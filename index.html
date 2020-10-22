@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrar Alumnos</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootswatch/4.5.2/superhero/bootstrap.min.css">
+</head>
+<body>  
+    <div class="container p-4">
+        <div class="row">
+           <div class="col-md-6"> <!--Formulario-->
+               <div class="card">
+                   <div class="card-body">
+                        <form id='formularioEst'>
+                            <div class="form-group">
+                                <label > Matricula:</label><br>
+                                <input type="text" id='matricula' placeholder="16534230" autofocus class=" input-group input-group-sm mb-3" >
+                            </div>
+                            <div class="form-group">
+                                <label > Nombre:</label><br>
+                                <input type="text" id='nom' placeholder="Juan Ramos"  class=" input-group input-group-sm mb-3" >
+                            </div>
+                            <div class="form-group">
+                                <label > Edad:</label><br>
+                                <input type="text" id='edad' placeholder="18" class="input-group input-group-sm mb-3" >
+                            </div>
+                            <div class="form-group">
+                                <label > Sexo:</label><br>
+                                <select id="idSexo" onchange="selectSexo()">
+                                    <option  >Mujer</option>
+                                    <option >Hombre</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label > Promedio:</label><br>
+                                <input type="text" id='promedio' placeholder="86" class=" input-group input-group-sm mb-3" >
+                            </div>
+                            <input type="button" id='savel' value="Guardar" class="btn btn-info" onclick="save()">
+                            <input type="button" id='savel' value="Buscar" class="btn btn-info" onclick="searchAlum()">
+                            
+                        </form>
+                   </div>
+               </div>
+           </div>
+           <div class="col-md-6"> <!--tabla alumnos-->
+            <div class="row" >
+                <table class="table table-bordered col-12" id="tabHom" style="overflow: auto;">
+                    <thead>  
+                        <tr>
+                            <th scope="col">Matricula</th>
+                            <th scope="col">Nombre</th>
+                            <th scope="col">Edad</th>
+                            <th scope="col">Sexo</th>
+                            <th scope="col">Promedio</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableHombre">
+                    </tbody>
+                </table>
+            </div>
+            <div class="row">
+                <table class="table table-bordered col-12" id="tabHom" style="overflow: auto;">
+                    <thead>
+                        <tr>
+                            <th scope="col">Matricula</th>
+                            <th scope="col">Nombre</th>
+                            <th scope="col">Edad</th>
+                            <th scope="col">Sexo</th>
+                            <th scope="col">Promedio</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableMujeres">
+
+                    </tbody>
+                </table>
+            </div>
+           </div>
+           <div class="col-md-6"> <!--tabla totales-->
+              
+                    <table class="table table-striped">
+                        <thead>
+                            <head>Totales</head> 
+                           
+                            <tr>
+                                <th scope="col">Total de alumnos</th>
+                                <th scope="col">Promedio general</th>
+                            
+                            </tr>  
+                        <tbody id="totales">
+                                                      
+                        </tbody>
+                    </table>
+           </div>
+        </div>
+    </div>
+    
+
+    <!-- The core Firebase JS SDK is always required and must be listed first -->
+    <script src="https://www.gstatic.com/firebasejs/7.24.0/firebase-app.js"></script>
+
+    <!-- TODO: Add SDKs for Firebase products that you want to use
+        https://firebase.google.com/docs/web/setup#available-libraries -->
+        
+        <script src="https://www.gstatic.com/firebasejs/7.24.0/firebase-firestore.js"></script>
+    <script>
+    // Your web app's Firebase configuration
+    var firebaseConfig = {
+        apiKey: "AIzaSyCUpUqzUlyQmWBhfecW7-TdOSxG3qm6J_I",
+        authDomain: "estudiantes-ad940.firebaseapp.com",
+        databaseURL: "https://estudiantes-ad940.firebaseio.com",
+        projectId: "estudiantes-ad940",
+        storageBucket: "estudiantes-ad940.appspot.com",
+        messagingSenderId: "874470425125",
+        appId: "1:874470425125:web:596f26eac95e601f0ef5cc"
+    };
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    </script>
+
+    <script>
+        const db=firebase.firestore();
+        let objeto,sexo="Mujer";
+        let totalAlumno=0, promedioGeneral=0, sumaPromedio=0,alumnoEncontrado=0;
+        
+        function selectSexo() {
+            let nom=document.getElementById('idSexo');
+            sexo=nom.options[nom.selectedIndex].text;
+            console.log(sexo + " Genero");
+        }
+       
+        function save() {
+            let matricula=document.getElementById('matricula').value;
+            let nombre=document.getElementById('nom').value;
+            let edad=document.getElementById('edad').value;
+            let promedio=document.getElementById('promedio').value;
+            
+           
+            if(matricula != "" & nombre != "" & edad != "" & promedio != ""){
+               
+                db.collection('Alumno').doc().set({
+                    matricula,
+                    nombre,
+                    edad,
+                    sexo,
+                    promedio
+                })
+             
+              document.getElementById('formularioEst').reset();
+              document.getElementById('matricula').focus();
+            }else{
+                alert("campos vacias");
+            }
+
+            
+        }
+
+        const getAlumnos= () => db.collection('Alumno').get();
+        const onGetAlumno = (callback)=>db.collection('Alumno').onSnapshot(callback);
+            window.addEventListener('DOMContentLoaded',async (e)=>{
+                onGetAlumno((getAl) => {
+                       
+                        document.getElementById('tableHombre').innerHTML ="";
+                        document.getElementById('tableMujeres').innerHTML ="";
+                        totalAlumno=0;
+                        sumaPromedio=0;
+
+                        getAl.forEach(element => {
+                            sumaPromedio+=parseInt(element.data().promedio);
+                            totalAlumno++;
+                            
+                            if(element.data().sexo == "Hombre"){
+                                document.getElementById('tableHombre').innerHTML += `<tr>
+                                
+                                    <td>  ${element.data().matricula} </td>
+                                    <td>  ${element.data().nombre} </td>
+                                    <td>  ${element.data().edad} </td>
+                                    <td>  ${element.data().sexo} </td>
+                                    <td>  ${element.data().promedio} </td>
+                                
+                                </tr>`
+                                sexo='Mujer';
+                            }else{
+                                document.getElementById('tableMujeres').innerHTML += `<tr>
+                                <td>  ${element.data().matricula} </td>
+                                <td>  ${element.data().nombre} </td>
+                                <td>  ${element.data().edad} </td>
+                                <td>  ${element.data().sexo} </td>
+                                <td>  ${element.data().promedio} </td>
+                            
+                            </tr>`
+                            }
+                        });
+
+                        promedioGeneral=sumaPromedio/totalAlumno;
+                        document.getElementById('totales').innerHTML = `<tr> 
+                            <td> ${totalAlumno} </td>
+                            <td> ${promedioGeneral} </td>
+                        </tr>`
+                });
+                
+               
+            });
+
+            function searchAlum() {
+                let matricula=document.getElementById('matricula').value
+                if(matricula != ""){
+                    db.collection('Alumno').where('matricula','==',matricula).onSnapshot((querySnapshot) =>{
+                            querySnapshot.forEach((doc)=>{
+                                console.log("entro 1");
+                                alumnoEncontrado=1;
+                                document.getElementById('nom').value=doc.data().nombre;
+                                document.getElementById('edad').value=doc.data().edad;
+                                document.getElementById('promedio').value=doc.data().promedio;
+                                document.getElementById('idSexo').value=doc.data().sexo
+                                
+                            });
+                            if(alumnoEncontrado==0){
+                                alert('Alumno no registrado');
+                            }else{
+                                alumnoEncontrado=0;
+                            }
+                    });
+                    
+                }else{
+                    alert('Ingrese la matricula a buscar');
+                }
+                               
+            }
+           
+    </script>
+    
+</body>
+</html>
